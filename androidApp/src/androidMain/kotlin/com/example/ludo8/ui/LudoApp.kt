@@ -121,6 +121,7 @@ private fun GameScreen(
     val validTokenIds = viewModel.validMoves()
     val animatedOverrides = remember { mutableStateMapOf<TokenRef, BoardPosition>() }
     val lastMove = state.lastMove
+    val starPositions = remember(viewModel) { viewModel.starBoardPositions() }
 
     LaunchedEffect(lastMove) {
         val move = lastMove ?: return@LaunchedEffect
@@ -185,6 +186,7 @@ private fun GameScreen(
 
         LudoBoard(
             positions = state.boardPositions,
+            starPositions = starPositions,
             animatedOverrides = animatedOverrides,
             onTokenClick = { tokenRef ->
                 if (state.winner != null) return@LudoBoard
@@ -217,6 +219,7 @@ private fun GameScreen(
 @Composable
 private fun LudoBoard(
     positions: List<TokenBoardPosition>,
+    starPositions: List<BoardPosition>,
     animatedOverrides: Map<TokenRef, BoardPosition>,
     onTokenClick: (TokenRef) -> Unit,
     modifier: Modifier = Modifier,
@@ -231,6 +234,7 @@ private fun LudoBoard(
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawBoardGrid(cellPx)
             drawBoardZones(cellPx)
+            drawStarCells(cellPx, starPositions)
         }
 
         positions.forEach { placed ->
@@ -299,4 +303,20 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBoardZones(cell
     drawRect(Color(0xFF1565C0).copy(alpha = 0.14f), topLeft = Offset(0f, 9 * cell), size = Size(6 * cell, 6 * cell))
 
     drawRect(Color.White, topLeft = Offset(6 * cell, 6 * cell), size = Size(3 * cell, 3 * cell))
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStarCells(
+    cell: Float,
+    positions: List<BoardPosition>,
+) {
+    positions.forEach { p ->
+        val center = Offset((p.col + 0.5f) * cell, (p.row + 0.5f) * cell)
+        drawCircle(color = Color(0xFFFFD54F).copy(alpha = 0.25f), radius = cell * 0.30f, center = center)
+        drawCircle(
+            color = Color(0xFFF57F17).copy(alpha = 0.35f),
+            radius = cell * 0.30f,
+            center = center,
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = cell * 0.04f),
+        )
+    }
 }

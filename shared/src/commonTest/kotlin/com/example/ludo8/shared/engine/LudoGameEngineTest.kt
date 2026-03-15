@@ -135,4 +135,30 @@ class LudoGameEngineTest {
         assertEquals(3, afterAuto.players.first { it.color == PlayerColor.Blue }.tokens[0].progress)
         assertNotNull(afterAuto.lastMove)
     }
+
+    @Test
+    fun guaranteesSixWithinFiveTriesPerPlayer() {
+        val engine = LudoGameEngine(playerCount = 2, dice = FixedDice(1))
+
+        repeat(8) {
+            engine.rollDice()
+            assertNull(engine.state.diceValue)
+        }
+
+        engine.rollDice()
+        assertEquals(PlayerColor.Blue, engine.state.currentPlayer.color)
+        assertEquals(6, engine.state.diceValue)
+
+        engine.moveToken(0)
+        assertNull(engine.state.diceValue)
+        assertEquals(PlayerColor.Blue, engine.state.currentPlayer.color)
+
+        engine.rollDice()
+        assertNull(engine.state.diceValue)
+        assertEquals(PlayerColor.Yellow, engine.state.currentPlayer.color)
+
+        engine.rollDice()
+        assertEquals(PlayerColor.Yellow, engine.state.currentPlayer.color)
+        assertEquals(6, engine.state.diceValue)
+    }
 }

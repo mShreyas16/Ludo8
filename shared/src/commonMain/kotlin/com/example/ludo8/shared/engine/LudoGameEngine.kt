@@ -22,6 +22,7 @@ class LudoGameEngine(
     playerCount: Int,
 ) {
     private var dice: Dice = RandomDice()
+    private val nonSixStreakByColor: MutableMap<PlayerColor, Int> = mutableMapOf()
     private val clockwiseTurnOrder: List<PlayerColor> = listOf(
         PlayerColor.Blue,
         PlayerColor.Yellow,
@@ -40,11 +41,16 @@ class LudoGameEngine(
     private var _state: GameState = newGame(colorsInGame)
     val state: GameState get() = _state
 
+    init {
+        resetNonSixStreaks(colorsInGame)
+    }
+
     /**
      * Starts a new game with [playerCount] players (2–4).
      */
     fun reset(playerCount: Int): GameState {
         colorsInGame = clockwiseTurnOrder.take(playerCount.coerceIn(2, 4))
+        resetNonSixStreaks(colorsInGame)
         _state = newGame(colorsInGame)
         return _state
     }
@@ -57,7 +63,7 @@ class LudoGameEngine(
         if (current.winner != null) return current
         if (current.diceValue != null) return current
 
-        val value = dice.roll()
+        val value = rollWithSixGuarantee(current.currentPlayer.color)
         val withDice = current.copy(
             diceValue = value,
             lastMove = null,
@@ -78,6 +84,10 @@ class LudoGameEngine(
     }
 
     fun getValidMoves(): List<Int> = getValidMoves(_state)
+
+    fun starBoardPositions(): List<com.example.ludo8.shared.model.BoardPosition> {
+        return LudoBoard.safeBoardPositions()
+    }
 
     /**
      * Convenience for Swift: returns the current valid token IDs as an [IntArray].
@@ -153,6 +163,27 @@ class LudoGameEngine(
             diceValue = null,
             message = "${state.players[next].color}'s turn",
         ).withComputedBoard()
+    }
+
+    private fun resetNonSixStreaks(colors: List<PlayerColor>) {
+        nonSixStreakByColor.clear()
+        colors.forEach { nonSixStreakByColor[it] = 0 }
+    }
+
+    private fun rollWithSixGuarantee(color: PlayerColor): Int {
+        val streak = nonSixStreakByColor[color] ?: 0
+        if (streak >= 4) {
+            nonSixStreakByColor[color] = 0
+            return 6
+        }
+
+        val rolled = dice.roll()
+        if (rolled == 6) {
+            nonSixStreakByColor[color] = 0
+        } else {
+            nonSixStreakByColor[color] = streak + 1
+        }
+        return rolled
     }
 
     private fun getValidMoves(state: GameState): List<Int> {

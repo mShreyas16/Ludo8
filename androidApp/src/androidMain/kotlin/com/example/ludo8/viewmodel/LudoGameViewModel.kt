@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.ludo8.shared.engine.LudoGameEngine
+import com.example.ludo8.shared.model.BoardPosition
 import com.example.ludo8.shared.model.GameState
 
 class LudoGameViewModel(playerCount: Int) {
@@ -21,6 +22,8 @@ class LudoGameViewModel(playerCount: Int) {
     }
 
     fun validMoves(): Set<Int> = engine.getValidMoves().toSet()
+
+    fun starBoardPositions(): List<BoardPosition> = engine.starBoardPositions()
 
     fun moveToken(tokenId: Int) {
         state = engine.moveToken(tokenId)

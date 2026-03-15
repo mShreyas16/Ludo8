@@ -105,6 +105,13 @@ internal object LudoBoard {
         }
     }
 
+    internal fun safeBoardPositions(): List<BoardPosition> {
+        return safeTrackIndices.toList().sorted().map { idx ->
+            val cell = mainTrack[idx]
+            BoardPosition(row = cell.y, col = cell.x)
+        }
+    }
+
     fun computeBoardPositions(
         players: List<com.example.ludo8.shared.model.Player>,
     ): List<TokenBoardPosition> {
