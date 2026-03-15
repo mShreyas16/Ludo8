@@ -2,6 +2,8 @@ package com.example.ludo8.shared.engine
 
 import com.example.ludo8.shared.model.Dice
 import com.example.ludo8.shared.model.PlayerColor
+import com.example.ludo8.shared.model.Token
+import com.example.ludo8.shared.rules.LudoBoard
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -72,6 +74,48 @@ class LudoGameEngineTest {
 
         val engine3 = LudoGameEngine(playerCount = 3, dice = FixedDice(1))
         assertEquals(listOf(PlayerColor.Blue, PlayerColor.Yellow, PlayerColor.Green), engine3.state.players.map { it.color })
+    }
+
+    @Test
+    fun homeLaneEntryMatchesPlayerColor() {
+        val firstHome = LudoBoard.homeStartProgress
+        val lastHome = LudoBoard.homeStartProgress + (LudoBoard.homeLaneLength - 1)
+
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 7, col = 1),
+            LudoBoard.tokenBoardPosition(PlayerColor.Yellow, Token(0, firstHome)),
+        )
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 7, col = 6),
+            LudoBoard.tokenBoardPosition(PlayerColor.Yellow, Token(0, lastHome)),
+        )
+
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 1, col = 7),
+            LudoBoard.tokenBoardPosition(PlayerColor.Green, Token(0, firstHome)),
+        )
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 6, col = 7),
+            LudoBoard.tokenBoardPosition(PlayerColor.Green, Token(0, lastHome)),
+        )
+
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 7, col = 13),
+            LudoBoard.tokenBoardPosition(PlayerColor.Red, Token(0, firstHome)),
+        )
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 7, col = 8),
+            LudoBoard.tokenBoardPosition(PlayerColor.Red, Token(0, lastHome)),
+        )
+
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 13, col = 7),
+            LudoBoard.tokenBoardPosition(PlayerColor.Blue, Token(0, firstHome)),
+        )
+        assertEquals(
+            com.example.ludo8.shared.model.BoardPosition(row = 8, col = 7),
+            LudoBoard.tokenBoardPosition(PlayerColor.Blue, Token(0, lastHome)),
+        )
     }
 
     @Test

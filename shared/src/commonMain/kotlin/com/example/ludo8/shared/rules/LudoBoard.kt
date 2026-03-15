@@ -11,23 +11,23 @@ internal object LudoBoard {
     private const val boardSize = 15
     const val trackLength = 52
     const val homeLaneLength = 6
-    const val finishedProgress = trackLength + homeLaneLength
+    const val homeStartProgress = trackLength - 1
+    const val finishedProgress = homeStartProgress + homeLaneLength
 
     private data class Cell(val x: Int, val y: Int)
 
     private enum class Corner { TopLeft, TopRight, BottomLeft, BottomRight }
 
+    private fun Int.floorMod(mod: Int): Int {
+        val r = this % mod
+        return if (r < 0) r + mod else r
+    }
+
     private data class ColorInfo(
         val color: PlayerColor,
-        val corner: Corner,
+        val baseCorner: Corner,
+        val homeCorner: Corner,
         val startIndex: Int,
-    )
-
-    private val colorInfos: Map<PlayerColor, ColorInfo> = mapOf(
-        PlayerColor.Yellow to ColorInfo(PlayerColor.Yellow, Corner.TopLeft, startIndex = 10),
-        PlayerColor.Blue to ColorInfo(PlayerColor.Blue, Corner.BottomLeft, startIndex = 23),
-        PlayerColor.Red to ColorInfo(PlayerColor.Red, Corner.BottomRight, startIndex = 36),
-        PlayerColor.Green to ColorInfo(PlayerColor.Green, Corner.TopRight, startIndex = 49),
     )
 
     private val mainTrack: List<Cell> = listOf(
@@ -85,6 +85,13 @@ internal object LudoBoard {
         Cell(7, 0),
     )
 
+    private val colorInfos: Map<PlayerColor, ColorInfo> = mapOf(
+        PlayerColor.Yellow to ColorInfo(PlayerColor.Yellow, baseCorner = Corner.TopLeft, homeCorner = Corner.BottomLeft, startIndex = 10),
+        PlayerColor.Blue to ColorInfo(PlayerColor.Blue, baseCorner = Corner.BottomLeft, homeCorner = Corner.BottomRight, startIndex = 23),
+        PlayerColor.Red to ColorInfo(PlayerColor.Red, baseCorner = Corner.BottomRight, homeCorner = Corner.TopRight, startIndex = 36),
+        PlayerColor.Green to ColorInfo(PlayerColor.Green, baseCorner = Corner.TopRight, homeCorner = Corner.TopLeft, startIndex = 49),
+    )
+
     init {
         require(mainTrack.size == trackLength) {
             "Track length mismatch: expected $trackLength, got ${mainTrack.size}"
@@ -116,15 +123,15 @@ internal object LudoBoard {
     }
 
     fun tokenTrackIndex(playerColor: PlayerColor, token: Token): Int? {
-        if (token.progress !in 0 until trackLength) return null
+        if (token.progress !in 0 until homeStartProgress) return null
         val start = colorInfos.getValue(playerColor).startIndex
         return (start - token.progress).floorMod(trackLength)
     }
 
-    fun tokenZone(token: Token): TokenZone {
+    private fun tokenZone(token: Token): TokenZone {
         return when {
             token.progress < 0 -> TokenZone.Base
-            token.progress < trackLength -> TokenZone.Track
+            token.progress < homeStartProgress -> TokenZone.Track
             token.progress < finishedProgress -> TokenZone.HomeLane
             else -> TokenZone.Finished
         }
@@ -138,15 +145,15 @@ internal object LudoBoard {
     private fun tokenCell(playerColor: PlayerColor, token: Token): Cell {
         val info = colorInfos.getValue(playerColor)
         return when {
-            token.progress < 0 -> baseCells(info.corner)[token.id.coerceIn(0, 3)]
-            token.progress < trackLength -> {
+            token.progress < 0 -> baseCells(info.baseCorner)[token.id.coerceIn(0, 3)]
+            token.progress < homeStartProgress -> {
                 val trackIndex = (info.startIndex - token.progress).floorMod(trackLength)
                 mainTrack[trackIndex]
             }
 
             token.progress < finishedProgress -> {
-                val homeIndex = (token.progress - trackLength).coerceIn(0, homeLaneLength - 1)
-                homeLaneCells(info.corner)[homeIndex]
+                val homeIndex = (token.progress - homeStartProgress).coerceIn(0, homeLaneLength - 1)
+                homeLaneCells(info.homeCorner)[homeIndex]
             }
 
             else -> Cell(7, 7)
@@ -169,10 +176,5 @@ internal object LudoBoard {
             Corner.BottomRight -> listOf(Cell(7, 13), Cell(7, 12), Cell(7, 11), Cell(7, 10), Cell(7, 9), Cell(7, 8))
             Corner.BottomLeft -> listOf(Cell(1, 7), Cell(2, 7), Cell(3, 7), Cell(4, 7), Cell(5, 7), Cell(6, 7))
         }
-    }
-
-    private fun Int.floorMod(mod: Int): Int {
-        val r = this % mod
-        return if (r < 0) r + mod else r
     }
 }
