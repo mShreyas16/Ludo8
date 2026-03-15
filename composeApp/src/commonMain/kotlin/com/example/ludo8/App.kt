@@ -240,27 +240,87 @@ private fun LudoBoard(
             drawStarCells(cellPx, starPositions)
         }
 
-        positions.forEach { placed ->
+        val placements = positions.map { placed ->
             val token = placed.token
             val p = animatedOverrides[token] ?: placed.position
-            TokenView(
-                color = token.playerColor,
-                modifier = Modifier
-                    .size(tokenSizeDp)
-                    .tokenOffset(cellDp, tokenInsetDp, p)
-                    .clickable { onTokenClick(token) },
-            )
+            TokenPlacement(token = token, position = p)
+        }
+        placements.groupBy { it.position }.values.forEach { stack ->
+            stack.forEachIndexed { index, placed ->
+                val layout = tokenLayout(
+                    index = index,
+                    count = stack.size,
+                    cellDp = cellDp,
+                    tokenInsetDp = tokenInsetDp,
+                    baseTokenSizeDp = tokenSizeDp,
+                )
+                TokenView(
+                    color = placed.token.playerColor,
+                    modifier = Modifier
+                        .size(layout.size)
+                        .tokenOffset(cellDp, placed.position, xInCell = layout.xInCell, yInCell = layout.yInCell)
+                        .clickable { onTokenClick(placed.token) },
+                )
+            }
         }
     }
 }
 
+private data class TokenPlacement(
+    val token: TokenRef,
+    val position: BoardPosition,
+)
+
+private data class TokenLayout(
+    val size: androidx.compose.ui.unit.Dp,
+    val xInCell: androidx.compose.ui.unit.Dp,
+    val yInCell: androidx.compose.ui.unit.Dp,
+)
+
+private fun tokenLayout(
+    index: Int,
+    count: Int,
+    cellDp: androidx.compose.ui.unit.Dp,
+    tokenInsetDp: androidx.compose.ui.unit.Dp,
+    baseTokenSizeDp: androidx.compose.ui.unit.Dp,
+): TokenLayout {
+    if (count <= 1) return TokenLayout(size = baseTokenSizeDp, xInCell = tokenInsetDp, yInCell = tokenInsetDp)
+
+    val size = baseTokenSizeDp * 0.56f
+    val pad = cellDp * 0.06f
+
+    val (xInCell, yInCell) = when (count) {
+        2 -> {
+            val x = if (index % 2 == 0) pad else (cellDp - size - pad)
+            val y = (cellDp - size) / 2f
+            x to y
+        }
+
+        3, 4 -> {
+            val x = if (index % 2 == 0) pad else (cellDp - size - pad)
+            val y = if (index < 2) pad else (cellDp - size - pad)
+            x to y
+        }
+
+        else -> {
+            val cols = 3
+            val x = pad + (size + pad) * (index % cols).toFloat()
+            val y = pad + (size + pad) * (index / cols).toFloat()
+            x to y
+        }
+    }
+
+    return TokenLayout(size = size, xInCell = xInCell, yInCell = yInCell)
+}
+
 private fun Modifier.tokenOffset(
     cellDp: androidx.compose.ui.unit.Dp,
-    insetDp: androidx.compose.ui.unit.Dp,
     p: BoardPosition,
+    xInCell: androidx.compose.ui.unit.Dp,
+    yInCell: androidx.compose.ui.unit.Dp,
 ): Modifier {
-    val x = (cellDp * p.col) + insetDp
-    val y = (cellDp * p.row) + insetDp
+    val x = (cellDp * p.col) + xInCell
+    val y = (cellDp * p.row) + yInCell
     return this.offset { IntOffset(x.roundToPx(), y.roundToPx()) }
 }
 
