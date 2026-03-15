@@ -136,11 +136,11 @@ private fun GameScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -151,10 +151,10 @@ private fun GameScreen(
             Button(onClick = { viewModel.reset(playerCount) }) { Text("Restart") }
         }
 
-        Text(state.message, modifier = Modifier.fillMaxWidth())
+        Text(state.message, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -200,7 +200,7 @@ private fun GameScreen(
                 .border(1.dp, MaterialTheme.colorScheme.outline),
         )
 
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(16.dp))
     }
 
     val winner = state.winner
