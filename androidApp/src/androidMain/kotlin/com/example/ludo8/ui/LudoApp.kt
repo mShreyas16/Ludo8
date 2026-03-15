@@ -131,9 +131,9 @@ private fun GameScreen(
         val token = move.token
         move.path.forEach { p ->
             animatedOverrides[token] = p
-            delay(70)
+            delay(110)
         }
-        delay(120)
+        delay(220)
         animatedOverrides.remove(token)
         viewModel.consumeLastMove()
     }
