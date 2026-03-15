@@ -129,6 +129,9 @@ private fun GameScreen(
 ) {
     val dice = state.diceValue
     val validTokenIds = engine.getValidMoves().toSet()
+    val movableTokens = remember(state.currentPlayer.color, validTokenIds) {
+        validTokenIds.map { TokenRef(state.currentPlayer.color, it) }.toSet()
+    }
     val animatedOverrides = remember { mutableStateMapOf<TokenRef, BoardPosition>() }
     val lastMove = state.lastMove
     val starPositions = remember(engine) { engine.starBoardPositions() }
@@ -192,6 +195,7 @@ private fun GameScreen(
         LudoBoard(
             positions = state.boardPositions,
             starPositions = starPositions,
+            movableTokens = movableTokens,
             animatedOverrides = animatedOverrides,
             onTokenClick = { tokenRef ->
                 if (state.winner != null) return@LudoBoard
@@ -223,6 +227,7 @@ private fun GameScreen(
 private fun LudoBoard(
     positions: List<TokenBoardPosition>,
     starPositions: List<BoardPosition>,
+    movableTokens: Set<TokenRef>,
     animatedOverrides: Map<TokenRef, BoardPosition>,
     onTokenClick: (TokenRef) -> Unit,
     modifier: Modifier = Modifier,
@@ -246,6 +251,21 @@ private fun LudoBoard(
             TokenPlacement(token = token, position = p)
         }
         placements.groupBy { it.position }.values.forEach { stack ->
+            val tokenToMove = stack.asSequence()
+                .map { it.token }
+                .filter { it in movableTokens }
+                .sortedBy { it.tokenId }
+                .firstOrNull()
+
+            if (tokenToMove != null) {
+                Box(
+                    modifier = Modifier
+                        .size(cellDp)
+                        .cellOffset(cellDp, stack.first().position)
+                        .clickable { onTokenClick(tokenToMove) },
+                )
+            }
+
             stack.forEachIndexed { index, placed ->
                 val layout = tokenLayout(
                     index = index,
@@ -258,12 +278,20 @@ private fun LudoBoard(
                     color = placed.token.playerColor,
                     modifier = Modifier
                         .size(layout.size)
-                        .tokenOffset(cellDp, placed.position, xInCell = layout.xInCell, yInCell = layout.yInCell)
-                        .clickable { onTokenClick(placed.token) },
+                        .tokenOffset(cellDp, placed.position, xInCell = layout.xInCell, yInCell = layout.yInCell),
                 )
             }
         }
     }
+}
+
+private fun Modifier.cellOffset(
+    cellDp: androidx.compose.ui.unit.Dp,
+    p: BoardPosition,
+): Modifier {
+    val x = cellDp * p.col
+    val y = cellDp * p.row
+    return this.offset { IntOffset(x.roundToPx(), y.roundToPx()) }
 }
 
 private data class TokenPlacement(
