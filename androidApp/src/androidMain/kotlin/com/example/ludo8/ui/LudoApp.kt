@@ -283,29 +283,28 @@ private fun tokenLayout(
 ): TokenLayout {
     if (count <= 1) return TokenLayout(size = baseTokenSizeDp, xInCell = tokenInsetDp, yInCell = tokenInsetDp)
 
-    val size = baseTokenSizeDp * 0.56f
-    val pad = cellDp * 0.06f
-
-    val (xInCell, yInCell) = when (count) {
-        2 -> {
-            val x = if (index % 2 == 0) pad else (cellDp - size - pad)
-            val y = (cellDp - size) / 2f
-            x to y
-        }
-
-        3, 4 -> {
-            val x = if (index % 2 == 0) pad else (cellDp - size - pad)
-            val y = if (index < 2) pad else (cellDp - size - pad)
-            x to y
-        }
-
-        else -> {
-            val cols = 3
-            val x = pad + (size + pad) * (index % cols).toFloat()
-            val y = pad + (size + pad) * (index / cols).toFloat()
-            x to y
-        }
+    val gap = cellDp * 0.06f
+    val cols = when {
+        count <= 4 -> 2
+        count <= 9 -> 3
+        else -> 4
     }
+    val rows = ((count - 1) / cols) + 1
+
+    val maxSize = baseTokenSizeDp * 0.56f
+    val sizeByWidth = (cellDp - (gap * 2f) - (gap * (cols - 1).toFloat())) / cols.toFloat()
+    val sizeByHeight = (cellDp - (gap * 2f) - (gap * (rows - 1).toFloat())) / rows.toFloat()
+    val size = minOf(maxSize, sizeByWidth, sizeByHeight)
+
+    val gridWidth = (size * cols.toFloat()) + (gap * (cols - 1).toFloat())
+    val gridHeight = (size * rows.toFloat()) + (gap * (rows - 1).toFloat())
+    val startX = (cellDp - gridWidth) / 2f
+    val startY = (cellDp - gridHeight) / 2f
+
+    val col = index % cols
+    val row = index / cols
+    val xInCell = startX + (size + gap) * col.toFloat()
+    val yInCell = startY + (size + gap) * row.toFloat()
 
     return TokenLayout(size = size, xInCell = xInCell, yInCell = yInCell)
 }
